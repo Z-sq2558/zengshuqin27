@@ -1,132 +1,96 @@
-#include<stdio.h>
-#include<stdbool.h>
-#include<malloc.h>
+#include"linkstack.h"
 
-typedef int elementype;
-
-typedef struct node{
-	elementype data;
-	struct node *next;
-}stacknode, *linkstackptr;
-
-typedef struct stack{
-	linkstackptr top;
-	int count;
-}Linkstack;
-
-/*若栈S为空栈，则返回TRUE,否则返回FALSE*/
- int stackempty(Linkstack S)
- {
-     if(S.count==0)
-          return 1;
-     else
-	   return 0;
-}
-bool push(Linkstack*S,elementype e)
-{
-  linkstackptr s=(linkstackptr)malloc(sizeof(stacknode));
-  s->data=e;
-  s->next=S->top;
-  S->top=s;
-  S->count++;
-  return true;
+LinkStack* InitStack(){
+	LinkStack *t=(LinkStack*)malloc(sizeof(LinkStack));
+	t->next=NULL;
+	return t;
 }
 
-int pop(Linkstack *s,elementype *e)
-{
-   linkstackptr p;
-   if(stackempty(*s))
-      return 0;
-   else
-  {
-    *e=s->top->data;
-    p=s->top;
-    s->top=s->top->next;
-    free(p);
-    s->count--;
-    return 1;
-   }
+int Empty(LinkStack *s){
+	return s->next==NULL;
 }
 
-void visit(elementype p)
-{
-  printf("%d",p);
+void Push(LinkStack *s,dataType x){
+	node *t=(node*)malloc(sizeof(node));
+	t->data=x;
+	t->next=s->next;
+	s->next=t;
 }
 
-bool traversestack(Linkstack s)
-{
-   linkstackptr p;
-   p=s.top;
-   while(p)
-   {
-      visit(p->data);
-      p=p->next;
-    }
-    printf("\n");
-    return true;
+void Pop(LinkStack *s){
+	if(Empty(s)) exit(1);
+	node *p=s->next;
+	s->next=p->next;
+	free(p);
 }
 
-/* 构造一个空栈S */
-bool lnitStack(Linkstack *S)
-{
-   S->top=(linkstackptr)malloc(sizeof(stacknode));
-   if(!S->top)
-	return false;
-   S->top=NULL;
-   S->count=0;
-   return true;
+dataType GetTop(LinkStack *s){
+	return s->next->data;
 }
 
-bool ClearStack(Linkstack *S)
-{
-    linkstackptr p,q;
-    p=S->top;
-    while(p)
-    {
-	q=p;
-	p=p->next;
-	free(q);
-     }
-     S->count=0;
-     return true;
+int priority(char x){
+	switch (x){
+		case'+':
+		case'-':
+		case'=':return 1;
+		case'*':
+		case'/':return 2;
+		case'(':return 3;
+	}
 }
 
-int StackLength(Linkstack S)
-{
-    return S.count;
+double compute(double x, double y,char op){
+	switch(op){
+		case'+':return x+y;
+		case'-':return x-y;
+		case'*':return x*y;
+		case'/':return x/y;
+	}
 }
 
-int GetTop(Linkstack S,elementype *e)
-{
-    if(S.top==NULL)
-	    return 0;
-    else
-	    *e=S.top->data;
-    return 1;
+void linkstack(){
+	char s2[500],t[1001],op;
+	double s1[500];
+	int top1=-1,top2=-1;
+	double x,y;
+	printf("请输入一个表达式：\n");
+	gets(t);
+	for(int i=0;i<strlen(t);i++){
+		if(t[i]>='0' && t[i]<='9'){
+			double value=0;
+			while(t[i]>='0' && t[i]<='9'){
+				value=10*value+t[i]-'0';
+				i++;
+			}
+			if(t[i]=='.'){
+				int r=10;
+				i++;
+				while(t[i]>='0' &&t[i]<='9'){
+					value += (double)(t[i]-'0')/r;
+					r=10*r;
+					i++;
+				}
+			}
+			s1[++top1]=value;
+		}
+		if(t[i]==')'){
+			while (s2[top2] !='('){
+				y= s1[top1--];
+				x= s1[top1--];
+				op = s2[top2--];
+				s1[++top1]=compute(x,y,op);
+			}
+			top2--;
+		}else{
+			while(top2!=-1&&s2[top2]!='('
+					&& priority(t[i])<=priority(s2[top2])){
+				y=s1[top1--];
+				x=s1[top1--];
+				op=s2[top2--];
+				s1[++top1]=compute(x,y,op);
+			}
+			s2[++top2]=t[i];
+		}
+	}
+	printf("%f\n",s1[top1]);
 }
-
-int main()
-{
-    int j;
-    Linkstack s;
-    int e;
-    if(lnitStack(&s)==true)
-	   for(j=1;j<=10;j++)
-                push(&s,j);
-    printf("栈中元素依次为：");
-    traversestack(s);
-    pop(&s,&e);
-    printf("弹出的栈顶元素e=%d\n",e);
-    printf("栈空否:%d(1:空 0:否)\n",stackempty(s));
-    GetTop(s,&e);
-    printf("栈顶元素e=%d栈的长度为%d\n",e,StackLength(s));
-    ClearStack(&s);
-    printf("清空栈后,栈空否: %d(1:空 0:否)\n",stackempty(s));
-
-    return 0;
-}
-
-
-
-
-   
